@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --card: #1c1c28;
+    --accent: #f5c842;
+    --accent2: #ff6b35;
+    --correct: #4ecdc4;
+    --wrong: #ff4757;
+    --text: #f0f0f5;
+    --muted: #6b6b80;
+    --border: rgba(245,200,66,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  .app {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  .header {
+    text-align: center;
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 8vw, 72px);
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #f5c842, #ff6b35);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .header-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  .progress-bar {
+    background: var(--surface);
+    height: 4px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+
+  .progress-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .score-display {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .category-badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    border: 1px solid rgba(255,107,53,0.3);
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 14px;
+  }
+
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 32px 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+  }
+
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  .question-word {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(38px, 9vw, 64px);
+    color: var(--text);
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  /* 発音記号エリア */
+  .phonetic-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .phonetic {
+    font-size: 17px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    font-style: italic;
+    opacity: 0.9;
+  }
+
+  .phonetic-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 1px 6px;
+    border-radius: 2px;
+  }
+
+  .btn-sound {
+    background: rgba(245,200,66,0.1);
+    border: 1px solid rgba(245,200,66,0.2);
+    border-radius: 3px;
+    padding: 3px 10px;
+    font-size: 13px;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+
+  .btn-sound:hover {
+    background: rgba(245,200,66,0.2);
+  }
+
+  .question-hint {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .option-btn {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 4px;
+    padding: 18px 16px;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    transition: all 0.18s ease;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(245,200,66,0.06);
+    transform: translateY(-1px);
+  }
+
+  .option-btn.correct {
+    border-color: var(--correct);
+    background: rgba(78,205,196,0.12);
+    color: var(--correct);
+  }
+
+  .option-btn.wrong {
+    border-color: var(--wrong);
+    background: rgba(255,71,87,0.12);
+    color: var(--wrong);
+  }
+
+  .option-btn:disabled { cursor: default; }
+
+  .option-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* 正解後に発音記号を大きく表示 */
+  .answer-phonetic-reveal {
+    display: none;
+    margin-top: 10px;
+    padding: 12px 16px;
+    background: rgba(245,200,66,0.06);
+    border: 1px solid rgba(245,200,66,0.15);
+    border-radius: 4px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .answer-phonetic-reveal.show { display: block; }
+
+  .apr-word {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .apr-ipa {
+    font-size: 18px;
+    color: var(--accent);
+    font-style: italic;
+    margin-bottom: 2px;
+  }
+
+  .apr-katakana {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .feedback {
+    display: none;
+    padding: 14px 20px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .feedback.show { display: block; }
+
+  .feedback.correct-fb {
+    background: rgba(78,205,196,0.1);
+    border: 1px solid rgba(78,205,196,0.3);
+    color: var(--correct);
+  }
+
+  .feedback.wrong-fb {
+    background: rgba(255,71,87,0.1);
+    border: 1px solid rgba(255,71,87,0.3);
+    color: var(--wrong);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .btn-next {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 4px;
+    padding: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: #0a0a0f;
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    display: none;
+  }
+
+  .btn-next.show { display: block; }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,200,66,0.25); }
+
+  /* Result */
+  .result-screen {
+    text-align: center;
+    padding: 40px 20px;
+    animation: slideIn 0.4s ease;
+    display: none;
+  }
+
+  .result-screen.show { display: block; }
+
+  .result-grade {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 100px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .result-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+  }
+
+  .result-score-big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--text);
+    margin: 8px 0;
+  }
+
+  .result-msg {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    line-height: 1.7;
+  }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 8px;
+  }
+
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; display: block; }
+  .stat-num.c { color: var(--correct); }
+  .stat-num.w { color: var(--wrong); }
+  .stat-num.p { color: var(--accent); }
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+  .btn-restart {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 40px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+    margin: 0 8px;
+  }
+
+  .btn-restart:hover {
+    border-color: var(--accent);
+    background: rgba(245,200,66,0.06);
+    transform: translateY(-2px);
+  }
+
+  /* Start screen */
+  .start-screen { text-align: center; padding: 20px 0 40px; }
+  .start-desc { font-size: 14px; color: var(--muted); line-height: 1.8; margin-bottom: 32px; }
+
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 4px 10px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 4px;
+    padding: 18px 60px;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: #0a0a0f;
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+
+  .btn-start:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(245,200,66,0.3); }
+
+  .quiz-main { display: none; }
+  .quiz-main.show { display: block; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-tag">English Vocabulary Quiz</div>
+    <h1>TRAVEL & DAILY</h1>
+    <div class="header-sub">旅行 & 日常英単語 50問 ／ 発音記号付き</div>
+  </div>
+
+  <div class="start-screen" id="startScreen">
+    <p class="start-desc">旅行や日常生活でよく使う英単語を<br>4択クイズ形式で学ぼう。発音記号（IPA）付き！</p>
+    <div class="tag-row">
+      <span class="tag">✈ 空港・交通</span>
+      <span class="tag">🏨 ホテル</span>
+      <span class="tag">🍽 レストラン</span>
+      <span class="tag">🛍 ショッピング</span>
+      <span class="tag">🏥 緊急・医療</span>
+      <span class="tag">💬 日常会話</span>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">START →</button>
+  </div>
+
+  <div class="quiz-main" id="quizMain">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-info">
+      <span class="progress-num" id="progressNum">1 / 50</span>
+      <span class="score-display" id="scoreDisplay">✓ 0 　✗ 0</span>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="q-label">QUESTION — この単語の意味は？</div>
+      <div class="category-badge" id="categoryBadge">TRAVEL</div>
+      <div class="question-word" id="questionWord">...</div>
+      <div class="phonetic-row">
+        <span class="phonetic-label">IPA</span>
+        <span class="phonetic" id="questionPhonetic"></span>
+        <button class="btn-sound" id="btnSound" onclick="speakWord()" title="発音を聞く">🔊</button>
+      </div>
+      <div class="question-hint" id="questionHint"></div>
+    </div>
+
+    <div class="options-grid" id="optionsGrid"></div>
+
+    <!-- 回答後の発音詳細 -->
+    <div class="answer-phonetic-reveal" id="phoneticReveal">
+      <div class="apr-word" id="aprWord"></div>
+      <div class="apr-ipa" id="aprIpa"></div>
+      <div class="apr-katakana" id="aprKatakana"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <button class="btn-next" id="btnNext" onclick="nextQuestion()">NEXT →</button>
+  </div>
+
+  <div class="result-screen" id="resultScreen">
+    <div class="result-label">FINAL SCORE</div>
+    <div class="result-grade" id="resultGrade">A</div>
+    <div class="result-score-big" id="resultScore">0/50</div>
+    <p class="result-msg" id="resultMsg"></p>
+    <div class="result-stats">
+      <div class="stat-box">
+        <span class="stat-num c" id="statCorrect">0</span>
+        <span class="stat-label">正解</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num w" id="statWrong">0</span>
+        <span class="stat-label">不正解</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num p" id="statPct">0%</span>
+        <span class="stat-label">正答率</span>
+      </div>
+    </div>
+    <button class="btn-restart" onclick="restartQuiz()">↺ もう一度</button>
+    <button class="btn-restart" onclick="restartShuffle()">🔀 シャッフル</button>
+  </div>
+</div>
+
+<script>
+const allQuestions = [
+  // ✈ 空港・フライト
+  { word: "departure", ipa: "/dɪˈpɑːrtʃər/", katakana: "ディパーチャー", answer: "出発", options: ["到着","出発","乗り換え","遅延"], category: "✈ 空港", hint: "e.g. departure gate" },
+  { word: "arrival", ipa: "/əˈraɪvəl/", katakana: "アライバル", answer: "到着", options: ["手荷物","到着","搭乗","予約"], category: "✈ 空港", hint: "e.g. arrival hall" },
+  { word: "boarding pass", ipa: "/ˈbɔːrdɪŋ pæs/", katakana: "ボーディング パス", answer: "搭乗券", options: ["パスポート","領収書","搭乗券","チケット"], category: "✈ 空港", hint: "you need this to board" },
+  { word: "customs", ipa: "/ˈkʌstəmz/", katakana: "カスタムズ", answer: "税関", options: ["両替","税関","入国審査","手荷物受取"], category: "✈ 空港", hint: "declare your goods here" },
+  { word: "layover", ipa: "/ˈleɪˌoʊvər/", katakana: "レイオーバー", answer: "乗り継ぎ", options: ["直行便","遅延","乗り継ぎ","取り消し"], category: "✈ 空港", hint: "a stop between flights" },
+  { word: "turbulence", ipa: "/ˈtɜːrbjələns/", katakana: "ターービュレンス", answer: "乱気流", options: ["天候","気圧","乱気流","高度"], category: "✈ 空港", hint: "makes the plane shake" },
+  { word: "aisle seat", ipa: "/aɪl siːt/", katakana: "アイル シート", answer: "通路側の席", options: ["窓側の席","非常口席","真ん中の席","通路側の席"], category: "✈ 空港", hint: "easier to get up" },
+  { word: "jet lag", ipa: "/dʒɛt læɡ/", katakana: "ジェット ラグ", answer: "時差ぼけ", options: ["旅疲れ","乗り物酔い","時差ぼけ","高山病"], category: "✈ 空港", hint: "feeling from crossing time zones" },
+  // 🚌 交通
+  { word: "fare", ipa: "/fɛr/", katakana: "フェア", answer: "運賃", options: ["距離","時刻表","運賃","乗り場"], category: "🚌 交通", hint: "the cost of a ticket" },
+  { word: "platform", ipa: "/ˈplætfɔːrm/", katakana: "プラットフォーム", answer: "ホーム（番線）", options: ["改札口","ホーム（番線）","時刻表","出口"], category: "🚌 交通", hint: "where trains stop" },
+  { word: "transfer", ipa: "/ˈtrænsfɜːr/", katakana: "トランスファー", answer: "乗り換え", options: ["往復","乗り換え","終点","始発"], category: "🚌 交通", hint: "change to another train" },
+  // 🏨 ホテル
+  { word: "check-in", ipa: "/ˈtʃɛkɪn/", katakana: "チェックイン", answer: "チェックイン", options: ["退室","チェックイン","延長","予約"], category: "🏨 ホテル", hint: "when you arrive at hotel" },
+  { word: "reservation", ipa: "/ˌrɛzərˈveɪʃən/", katakana: "レザベイション", answer: "予約", options: ["キャンセル","確認","予約","変更"], category: "🏨 ホテル", hint: "booking in advance" },
+  { word: "amenities", ipa: "/əˈmiːnɪtiz/", katakana: "アミーニティーズ", answer: "設備・備品", options: ["朝食","設備・備品","フロント","駐車場"], category: "🏨 ホテル", hint: "extras provided by the hotel" },
+  { word: "vacancy", ipa: "/ˈveɪkənsi/", katakana: "ヴェイカンシー", answer: "空室", options: ["満室","禁煙","空室","スイート"], category: "🏨 ホテル", hint: "a room is available" },
+  { word: "concierge", ipa: "/ˌkɒnsiˈɛərʒ/", katakana: "コンシェルジュ", answer: "コンシェルジュ", options: ["ベルボーイ","フロント係","コンシェルジュ","支配人"], category: "🏨 ホテル", hint: "helps with recommendations" },
+  { word: "complimentary", ipa: "/ˌkɒmplɪˈmɛntəri/", katakana: "コンプリメンタリー", answer: "無料の・サービスの", options: ["有料の","無料の・サービスの","割引の","限定の"], category: "🏨 ホテル", hint: "\"~ breakfast included\"" },
+  // 🍽 レストラン・食事
+  { word: "appetizer", ipa: "/ˈæpɪtaɪzər/", katakana: "アペタイザー", answer: "前菜", options: ["デザート","主菜","前菜","飲み物"], category: "🍽 食事", hint: "served before the main course" },
+  { word: "menu", ipa: "/ˈmɛnjuː/", katakana: "メニュー", answer: "メニュー", options: ["請求書","メニュー","予約","テーブル"], category: "🍽 食事", hint: "list of dishes" },
+  { word: "bill", ipa: "/bɪl/", katakana: "ビル", answer: "請求書・勘定", options: ["チップ","割引","請求書・勘定","税金"], category: "🍽 食事", hint: "\"Can I have the ~, please?\"" },
+  { word: "tip", ipa: "/tɪp/", katakana: "ティップ", answer: "チップ（心付け）", options: ["税金","割引","チップ（心付け）","釣り銭"], category: "🍽 食事", hint: "extra for good service" },
+  { word: "allergic", ipa: "/əˈlɜːrdʒɪk/", katakana: "アラージック", answer: "アレルギーがある", options: ["満腹な","辛い","アレルギーがある","ベジタリアン"], category: "🍽 食事", hint: "\"I'm ~ to nuts\"" },
+  { word: "recommend", ipa: "/ˌrɛkəˈmɛnd/", katakana: "レコメンド", answer: "おすすめする", options: ["注文する","おすすめする","断る","変更する"], category: "🍽 食事", hint: "\"What do you ~?\"" },
+  { word: "to-go", ipa: "/tuː ɡoʊ/", katakana: "トゥー ゴー", answer: "持ち帰り", options: ["店内飲食","持ち帰り","宅配","予約席"], category: "🍽 食事", hint: "takeout in American English" },
+  // 🛍 ショッピング
+  { word: "receipt", ipa: "/rɪˈsiːt/", katakana: "リシート", answer: "領収書", options: ["請求書","領収書","保証書","値札"], category: "🛍 買い物", hint: "proof of purchase" },
+  { word: "discount", ipa: "/ˈdɪskaʊnt/", katakana: "ディスカウント", answer: "割引", options: ["返金","割引","消費税","送料"], category: "🛍 買い物", hint: "reduced price" },
+  { word: "refund", ipa: "/ˈriːfʌnd/", katakana: "リーファンド", answer: "返金", options: ["交換","返金","値下げ","保証"], category: "🛍 買い物", hint: "getting your money back" },
+  { word: "fitting room", ipa: "/ˈfɪtɪŋ ruːm/", katakana: "フィッティング ルーム", answer: "試着室", options: ["倉庫","試着室","レジ","サービスカウンター"], category: "🛍 買い物", hint: "try clothes here" },
+  { word: "cash register", ipa: "/kæʃ ˈrɛdʒɪstər/", katakana: "キャッシュ レジスター", answer: "レジ", options: ["バーコード","商品棚","レジ","両替機"], category: "🛍 買い物", hint: "where you pay" },
+  { word: "bargain", ipa: "/ˈbɑːrɡɪn/", katakana: "バーゲン", answer: "お得品・格安", options: ["高級品","お得品・格安","特注品","中古品"], category: "🛍 買い物", hint: "a great deal" },
+  { word: "available", ipa: "/əˈveɪləbəl/", katakana: "アヴェイラブル", answer: "在庫あり・利用可能", options: ["売り切れ","予約中","在庫あり・利用可能","廃盤"], category: "🛍 買い物", hint: "\"Is this size ~?\"" },
+  // 🏥 医療・緊急
+  { word: "pharmacy", ipa: "/ˈfɑːrməsi/", katakana: "ファーマシー", answer: "薬局", options: ["病院","診療所","薬局","救急"], category: "🏥 緊急", hint: "where you buy medicine" },
+  { word: "prescription", ipa: "/prɪˈskrɪpʃən/", katakana: "プリスクリプション", answer: "処方箋", options: ["領収書","診断書","処方箋","保険証"], category: "🏥 緊急", hint: "from the doctor for medicine" },
+  { word: "emergency", ipa: "/ɪˈmɜːrdʒənsi/", katakana: "エマージェンシー", answer: "緊急事態", options: ["事故","緊急事態","警告","危険"], category: "🏥 緊急", hint: "call 119 or 911" },
+  { word: "symptom", ipa: "/ˈsɪmptəm/", katakana: "シンプトム", answer: "症状", options: ["原因","治療","症状","副作用"], category: "🏥 緊急", hint: "signs of illness" },
+  { word: "insurance", ipa: "/ɪnˈʃʊərəns/", katakana: "インシュアランス", answer: "保険", options: ["保証","保険","契約","補償"], category: "🏥 緊急", hint: "travel ~ is important" },
+  // 💬 日常会話
+  { word: "appreciate", ipa: "/əˈpriːʃieɪt/", katakana: "アプリーシエイト", answer: "感謝する", options: ["理解する","感謝する","謝る","尊敬する"], category: "💬 日常", hint: "\"I really ~ your help\"" },
+  { word: "apologize", ipa: "/əˈpɒlədʒaɪz/", katakana: "アポロジャイズ", answer: "謝る", options: ["感謝する","謝る","許す","断る"], category: "💬 日常", hint: "say sorry formally" },
+  { word: "excuse", ipa: "/ɪkˈskjuːz/", katakana: "イクスキューズ", answer: "許す・言い訳", options: ["理由","許す・言い訳","謝罪","断り"], category: "💬 日常", hint: "\"~ me!\"" },
+  { word: "schedule", ipa: "/ˈskɛdʒuːl/", katakana: "スケジュール", answer: "予定・スケジュール", options: ["計画","予定・スケジュール","締め切り","会議"], category: "💬 日常", hint: "\"What's your ~?\"" },
+  { word: "direction", ipa: "/dɪˈrɛkʃən/", katakana: "ディレクション", answer: "方向・道案内", options: ["距離","場所","方向・道案内","地図"], category: "💬 日常", hint: "\"Can you give me ~s?\"" },
+  { word: "nearby", ipa: "/ˌnɪərˈbaɪ/", katakana: "ニアバイ", answer: "近くに", options: ["遠くに","近くに","ちょうど","どこでも"], category: "💬 日常", hint: "\"Is there a cafe ~?\"" },
+  // 💰 お金
+  { word: "exchange rate", ipa: "/ɪksˈtʃeɪndʒ reɪt/", katakana: "エクスチェンジ レート", answer: "為替レート", options: ["手数料","金利","為替レート","税率"], category: "💰 お金", hint: "USD to JPY" },
+  { word: "ATM", ipa: "/eɪ tiː ɛm/", katakana: "エーティーエム", answer: "現金自動預払機", options: ["銀行窓口","両替所","現金自動預払機","コンビニ"], category: "💰 お金", hint: "withdraw cash here" },
+  { word: "currency", ipa: "/ˈkʌrənsi/", katakana: "カーレンシー", answer: "通貨", options: ["硬貨","通貨","紙幣","外貨"], category: "💰 お金", hint: "yen, dollar, euro..." },
+  // 🗺 観光
+  { word: "attraction", ipa: "/əˈtrækʃən/", katakana: "アトラクション", answer: "観光スポット", options: ["地図","ガイド","観光スポット","写真"], category: "🗺 観光", hint: "a tourist ~" },
+  { word: "souvenir", ipa: "/ˌsuːvəˈnɪər/", katakana: "スーヴェニア", answer: "お土産", options: ["記念品店","お土産","写真","パンフレット"], category: "🗺 観光", hint: "a gift from a trip" },
+  { word: "guided tour", ipa: "/ˈɡaɪdɪd tʊər/", katakana: "ガイデッド ツアー", answer: "ガイドツアー", options: ["自由行動","ガイドツアー","移動手段","観光バス"], category: "🗺 観光", hint: "with an expert guide" },
+  { word: "admission", ipa: "/ədˈmɪʃən/", katakana: "アドミッション", answer: "入場料", options: ["駐車料金","入場料","会員費","予約料"], category: "🗺 観光", hint: "fee to enter a museum" },
+  { word: "itinerary", ipa: "/aɪˈtɪnərɛri/", katakana: "アイティネラリー", answer: "旅程表", options: ["地図","旅程表","パスポート","ガイドブック"], category: "🗺 観光", hint: "your travel plan" },
+  { word: "landmark", ipa: "/ˈlændmɑːrk/", katakana: "ランドマーク", answer: "ランドマーク・名所", options: ["道標","ランドマーク・名所","地名","国境"], category: "🗺 観光", hint: "famous recognizable place" },
+];
+
+let questions = [];
+let current = 0;
+let score = 0;
+let wrong = 0;
+let answered = false;
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function startQuiz() {
+  questions = shuffle(allQuestions);
+  current = 0; score = 0; wrong = 0;
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('quizMain').classList.add('show');
+  document.getElementById('resultScreen').classList.remove('show');
+  showQuestion();
+}
+
+function restartQuiz() {
+  current = 0; score = 0; wrong = 0;
+  document.getElementById('resultScreen').classList.remove('show');
+  document.getElementById('quizMain').classList.add('show');
+  showQuestion();
+}
+
+function restartShuffle() {
+  questions = shuffle(allQuestions);
+  restartQuiz();
+}
+
+function speakWord() {
+  if (!window.speechSynthesis) return;
+  const q = questions[current];
+  const utter = new SpeechSynthesisUtterance(q.word);
+  utter.lang = 'en-US';
+  utter.rate = 0.85;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utter);
+}
+
+function showQuestion() {
+  answered = false;
+  const q = questions[current];
+
+  const pct = (current / 50) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressNum').textContent = `${current + 1} / 50`;
+  document.getElementById('scoreDisplay').textContent = `✓ ${score} 　✗ ${wrong}`;
+
+  document.getElementById('categoryBadge').textContent = q.category;
+  document.getElementById('questionWord').textContent = q.word;
+  document.getElementById('questionPhonetic').textContent = q.ipa;
+  document.getElementById('questionHint').textContent = q.hint || '';
+
+  // 発音詳細リセット
+  document.getElementById('phoneticReveal').classList.remove('show');
+
+  // Options
+  const opts = shuffle(q.options);
+  const labels = ['A', 'B', 'C', 'D'];
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-label">${labels[i]}</span>${opt}`;
+    btn.onclick = () => selectAnswer(opt, q.answer);
+    grid.appendChild(btn);
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.textContent = '';
+  document.getElementById('btnNext').classList.remove('show');
+
+  const card = document.getElementById('questionCard');
+  card.style.animation = 'none';
+  requestAnimationFrame(() => { card.style.animation = 'slideIn 0.3s ease'; });
+}
+
+function selectAnswer(selected, correct) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach(btn => {
+    btn.disabled = true;
+    const text = btn.textContent.slice(1);
+    if (text === correct) btn.classList.add('correct');
+    else if (text === selected && selected !== correct) btn.classList.add('wrong');
+  });
+
+  // 発音詳細を表示
+  document.getElementById('aprWord').textContent = q.word;
+  document.getElementById('aprIpa').textContent = q.ipa;
+  document.getElementById('aprKatakana').textContent = '📢 ' + q.katakana + '　→　' + correct;
+  document.getElementById('phoneticReveal').classList.add('show');
+
+  const fb = document.getElementById('feedback');
+  if (selected === correct) {
+    score++;
+    fb.className = 'feedback correct-fb show';
+    fb.textContent = `✓ 正解！　「${correct}」`;
+  } else {
+    wrong++;
+    fb.className = 'feedback wrong-fb show';
+    fb.textContent = `✗ 不正解。正解は「${correct}」`;
+  }
+
+  document.getElementById('scoreDisplay').textContent = `✓ ${score} 　✗ ${wrong}`;
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('btnNext').textContent = current === 49 ? '結果を見る →' : 'NEXT →';
+
+  // 自動発音
+  speakWord();
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= 50) showResult();
+  else showQuestion();
+}
+
+function showResult() {
+  document.getElementById('quizMain').classList.remove('show');
+  const rs = document.getElementById('resultScreen');
+  rs.classList.add('show');
+
+  const pct = Math.round((score / 50) * 100);
+  let grade, msg;
+  if (pct >= 90) { grade = 'S'; msg = '素晴らしい！旅行英語マスターです✨\nどんな場面でも自信を持って話せますね。'; }
+  else if (pct >= 80) { grade = 'A'; msg = '優秀！ほとんどの単語をマスターしています。\n旅行でも日常でも問題なく使えますね。'; }
+  else if (pct >= 70) { grade = 'B'; msg = 'なかなか良い成績！あともう少しで完璧。\n苦手な分野を重点的に復習しましょう。'; }
+  else if (pct >= 50) { grade = 'C'; msg = '半分以上正解！基礎は身についています。\n旅行前にもう一度チャレンジしてみよう。'; }
+  else { grade = 'D'; msg = 'まだ伸びしろあり！単語学習は継続が大事。\nシャッフルして何度でも挑戦しよう！'; }
+
+  document.getElementById('resultGrade').textContent = grade;
+  document.getElementById('resultScore').textContent = `${score} / 50`;
+  document.getElementById('resultMsg').textContent = msg;
+  document.getElementById('statCorrect').textContent = score;
+  document.getElementById('statWrong').textContent = wrong;
+  document.getElementById('statPct').textContent = pct + '%';
+}
+</script>
+</body>
+</html>
