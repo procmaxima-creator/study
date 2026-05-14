@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Python クイズ 🐍</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --surface2: #eeece7;
+    --text: #1a1814;
+    --text2: #6b6760;
+    --border: rgba(0,0,0,0.1);
+    --green-bg: #e1f5ee;
+    --green-mid: #9fe1cb;
+    --green-dark: #085041;
+    --green-text: #04342c;
+    --red-bg: #fcebeb;
+    --red-mid: #f7c1c1;
+    --red-dark: #501313;
+    --accent: #1D9E75;
+    --radius: 14px;
+    --radius-sm: 9px;
+  }
+
+  body {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding: 24px 20px 40px;
+  }
+
+  /* ── ホーム ── */
+  .home-hero {
+    text-align: center;
+    padding: 48px 0 32px;
+  }
+  .home-hero .snake { font-size: 56px; margin-bottom: 12px; }
+  .home-hero h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .home-hero p  { font-size: 14px; color: var(--text2); margin-bottom: 32px; }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .stat-card .num { font-size: 28px; font-weight: 700; font-family: 'DM Mono', monospace; }
+  .stat-card .label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  /* ── ボタン ── */
+  .btn-primary {
+    display: block; width: 100%;
+    padding: 16px;
+    background: var(--text);
+    color: var(--bg);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn-primary:active { opacity: .85; transform: scale(.98); }
+
+  .btn-ghost {
+    display: block; width: 100%;
+    padding: 14px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, transform .1s;
+  }
+  .btn-ghost:active { background: var(--surface2); transform: scale(.98); }
+
+  .btn-back {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text2);
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+
+  /* ── クイズ ── */
+  .quiz-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .progress-wrap {
+    flex: 1;
+    height: 5px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  #progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width .4s ease;
+  }
+  #q-counter {
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .q-cat {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .q-text { font-size: 17px; font-weight: 500; line-height: 1.6; }
+  .q-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-top: 14px;
+    white-space: pre-wrap;
+    display: none;
+    line-height: 1.7;
+  }
+
+  .choices { display: flex; flex-direction: column; gap: 9px; }
+  .choice-btn {
+    width: 100%;
+    padding: 14px 16px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    line-height: 1.5;
+    transition: background .12s, border-color .12s, transform .08s;
+  }
+  .choice-btn:active:not(:disabled) { transform: scale(.98); }
+  .choice-btn:disabled { cursor: default; }
+  .choice-btn.correct {
+    background: var(--green-bg);
+    border-color: var(--accent);
+    color: var(--green-text);
+    font-weight: 500;
+  }
+  .choice-btn.wrong {
+    background: var(--red-bg);
+    border-color: #E24B4A;
+    color: var(--red-dark);
+  }
+
+  /* ── 解説 ── */
+  .feedback {
+    display: none;
+    margin-top: 14px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid transparent;
+    animation: slideUp .2s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .feedback.ok  { background: var(--green-bg); border-color: #5dcaa5; }
+  .feedback.ng  { background: var(--red-bg);   border-color: #f09595; }
+
+  .fb-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 16px;
+  }
+  .feedback.ok .fb-header { background: var(--green-mid); }
+  .feedback.ng .fb-header { background: var(--red-mid); }
+
+  .fb-icon  { font-size: 18px; }
+  .fb-title { font-size: 14px; font-weight: 700; }
+  .feedback.ok .fb-title { color: var(--green-text); }
+  .feedback.ng .fb-title { color: var(--red-dark); }
+
+  .fb-body  { padding: 12px 16px 14px; }
+  .fb-exp   { font-size: 14px; line-height: 1.75; }
+  .feedback.ok .fb-exp { color: var(--green-text); }
+  .feedback.ng .fb-exp { color: var(--red-dark); }
+
+  .fb-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 12.5px;
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-top: 10px;
+    white-space: pre-wrap;
+    line-height: 1.7;
+    display: none;
+  }
+  .feedback.ok .fb-code { background: #c5ead8; color: var(--green-text); }
+  .feedback.ng .fb-code { background: #f7c1c1; color: var(--red-dark); }
+
+  #next-btn { margin-top: 14px; }
+
+  /* ── リザルト ── */
+  .result-wrap { text-align: center; padding: 48px 0 32px; }
+  .result-wrap .emoji { font-size: 64px; margin-bottom: 12px; }
+  .result-wrap h2 { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
+  .result-score {
+    font-size: 48px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    margin: 16px 0;
+    letter-spacing: -1px;
+  }
+  .result-msg { font-size: 15px; color: var(--text2); margin-bottom: 32px; line-height: 1.6; }
+  .result-wrap .btn-primary { margin-bottom: 10px; }
+
+  /* ── hidden ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ホーム -->
+  <div id="home-screen" class="screen active">
+    <div class="home-hero">
+      <div class="snake">🐍</div>
+      <h1>Python クイズ</h1>
+      <p>初歩レベル・全10問　スキマ時間で学ぼう</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="num" id="stat-correct">0</div>
+        <div class="label">正解数（累計）</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="stat-total">0</div>
+        <div class="label">解いた問題数</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="startQuiz()">はじめる →</button>
+  </div>
+
+  <!-- クイズ -->
+  <div id="quiz-screen" class="screen">
+    <div class="quiz-top">
+      <button class="btn-back" onclick="goHome()">← 戻る</button>
+      <div class="progress-wrap"><div id="progress-bar" style="width:0%"></div></div>
+      <span id="q-counter">1/10</span>
+    </div>
+
+    <div class="q-card">
+      <div class="q-cat" id="q-category"></div>
+      <div class="q-text" id="q-text"></div>
+      <pre class="q-code" id="q-code"></pre>
+    </div>
+
+    <div class="choices" id="choices"></div>
+
+    <div class="feedback" id="feedback-box">
+      <div class="fb-header">
+        <span class="fb-icon" id="fb-icon"></span>
+        <span class="fb-title" id="fb-title"></span>
+      </div>
+      <div class="fb-body">
+        <div class="fb-exp" id="fb-exp"></div>
+        <pre class="fb-code" id="fb-code"></pre>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="next-btn" style="display:none" onclick="nextQuestion()">次の問題 →</button>
+  </div>
+
+  <!-- リザルト -->
+  <div id="result-screen" class="screen">
+    <div class="result-wrap">
+      <div class="emoji" id="result-emoji">🎉</div>
+      <h2>お疲れさまでした！</h2>
+      <div class="result-score" id="result-score">0/10</div>
+      <p class="result-msg" id="result-msg"></p>
+      <button class="btn-primary" onclick="startQuiz()">もう一度チャレンジ →</button>
+      <button class="btn-ghost" onclick="goHome()">ホームへ戻る</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  {cat:"変数・型", q:"Pythonで整数を文字列に変換する関数は？",
+   code:null, choices:["str()","int()","float()","chr()"], ans:0,
+   exp:"str() は値を文字列に変換します。",
+   expCode:"str(42)   # → '42'\nstr(3.14) # → '3.14'"},
+  {cat:"変数・型", q:"次のコードを実行すると何が表示される？",
+   code:"x = 10\ny = 3\nprint(x // y)", choices:["3","3.33","4","30"], ans:0,
+   exp:"// は切り捨て除算（整数除算）です。小数部分を切り捨てて整数を返します。",
+   expCode:"10 // 3  # → 3\n10 / 3   # → 3.333...（通常の割り算）"},
+  {cat:"変数・型", q:"type(3.14) の結果は？",
+   code:null, choices:["<class 'float'>","<class 'int'>","<class 'str'>","<class 'number'>"], ans:0,
+   exp:"3.14 は小数（float型）です。type() で型を確認できます。",
+   expCode:"type(3.14)  # → <class 'float'>\ntype(3)     # → <class 'int'>"},
+  {cat:"リスト", q:"リストの末尾に要素を追加するメソッドは？",
+   code:null, choices:["append()","add()","insert()","push()"], ans:0,
+   exp:"append() でリストの末尾に要素を追加します。",
+   expCode:"lst = [1, 2, 3]\nlst.append(4)\nprint(lst)  # → [1, 2, 3, 4]"},
+  {cat:"リスト", q:"次のコードの出力は？",
+   code:"nums = [1, 2, 3, 4, 5]\nprint(nums[1:3])", choices:["[2, 3]","[1, 2, 3]","[2, 3, 4]","[1, 2]"], ans:0,
+   exp:"スライス [start:end] は start以上 end未満の要素を返します。インデックスは0始まりです。",
+   expCode:"nums = [1, 2, 3, 4, 5]\nnums[1:3]  # → [2, 3]（index 1, 2）\nnums[0:2]  # → [1, 2]"},
+  {cat:"条件分岐", q:"Pythonの条件式で正しく書かれているのは？",
+   code:null, choices:["if x == 10:","if x = 10:","if (x == 10)","if x === 10:"], ans:0,
+   exp:"== で等値比較し、if文の末尾に : が必要です。= は代入、=== はJavaScriptの書き方です。",
+   expCode:"x = 10\nif x == 10:\n    print('ten')  # → ten"},
+  {cat:"ループ", q:"次のコードは何回「Hello」を表示する？",
+   code:'for i in range(3):\n    print("Hello")', choices:["3回","4回","2回","0回"], ans:0,
+   exp:"range(3) は 0, 1, 2 の3つを生成するので、ループは3回実行されます。",
+   expCode:"for i in range(3):\n    print(i)  # 0, 1, 2"},
+  {cat:"関数", q:"Pythonで関数を定義するキーワードは？",
+   code:null, choices:["def","function","func","define"], ans:0,
+   exp:"def キーワードで関数を定義します。関数名の後に () と : を書きます。",
+   expCode:"def greet(name):\n    return 'Hello, ' + name\n\ngreet('Taro')  # → 'Hello, Taro'"},
+  {cat:"文字列", q:"文字列 'Hello' の長さを返すコードは？",
+   code:null, choices:["len('Hello')","'Hello'.length","size('Hello')","count('Hello')"], ans:0,
+   exp:"len() は文字列・リスト・辞書などの要素数を返す組み込み関数です。",
+   expCode:"len('Hello')   # → 5\nlen([1,2,3])  # → 3"},
+  {cat:"真偽値", q:"次のうち False と評価されるのは？",
+   code:null, choices:["0","1","'False'","[0]"], ans:0,
+   exp:"Pythonでは 0、空文字 ''、空リスト []、None などは False 扱いです。文字列 'False' は空でないので True です。",
+   expCode:"bool(0)       # → False\nbool('')      # → False\nbool('False') # → True（空でない文字列）"},
+  {cat:"変数・型", q:"Python でコメントを書くときに使う記号は？",
+   code:null, choices:["#","//","/*","--"], ans:0,
+   exp:"# を行の先頭または途中に書くと、それ以降はコメントとして無視されます。",
+   expCode:"# これはコメントです\nx = 10  # ここもコメント"},
+  {cat:"リスト", q:"リストの要素数を返す関数は？",
+   code:null, choices:["len()","count()","size()","length()"], ans:0,
+   exp:"len() はリスト・文字列・辞書などの要素数を返します。",
+   expCode:"len([1, 2, 3])  # → 3\nlen([])         # → 0"},
+  {cat:"辞書", q:"辞書（dict）を作る正しい書き方は？",
+   code:null, choices:['{"key": "value"}','["key": "value"]','("key", "value")','<key: value>'], ans:0,
+   exp:"{} を使って辞書を定義します。キーと値を : で区切り、複数の場合は , で並べます。",
+   expCode:'d = {"name": "Taro", "age": 25}\nprint(d["name"])  # → Taro'},
+  {cat:"ループ", q:"リスト [1,2,3] の各要素を順に取り出すコードは？",
+   code:null, choices:["for x in [1,2,3]:","for x = [1,2,3]:","foreach x in [1,2,3]:","loop x in [1,2,3]:"], ans:0,
+   exp:"for ... in ... はリスト・文字列・辞書などを順番に取り出す基本構文です。",
+   expCode:"for x in [1, 2, 3]:\n    print(x)  # 1, 2, 3"},
+  {cat:"関数", q:"関数から値を返すキーワードは？",
+   code:null, choices:["return","yield return","output","send"], ans:0,
+   exp:"return で関数の戻り値を指定します。return がない関数は自動的に None を返します。",
+   expCode:"def add(a, b):\n    return a + b\n\nresult = add(3, 4)  # → 7"},
+];
+
+let questions = [], current = 0, score = 0;
+let totalCorrect = 0, totalDone = 0;
+
+try {
+  totalCorrect = parseInt(localStorage.getItem('pyq_correct') || '0');
+  totalDone    = parseInt(localStorage.getItem('pyq_done')    || '0');
+} catch(e){}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  questions = shuffle(ALL_QUESTIONS).slice(0, 10);
+  current = 0; score = 0;
+  show('quiz-screen');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  document.getElementById('q-counter').textContent = `${current + 1}/10`;
+  document.getElementById('progress-bar').style.width = `${current * 10}%`;
+  document.getElementById('q-category').textContent = q.cat;
+  document.getElementById('q-text').textContent = q.q;
+
+  const codeEl = document.getElementById('q-code');
+  if (q.code) { codeEl.textContent = q.code; codeEl.style.display = 'block'; }
+  else         { codeEl.style.display = 'none'; }
+
+  const correctText = q.choices[q.ans];
+  const shuffled = shuffle(q.choices);
+  const container = document.getElementById('choices');
+  container.innerHTML = '';
+  shuffled.forEach(text => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = text;
+    btn.dataset.correct = text === correctText ? '1' : '0';
+    btn.onclick = () => selectAnswer(btn, text, correctText, q.exp, q.expCode);
+    container.appendChild(btn);
+  });
+
+  const fb = document.getElementById('feedback-box');
+  fb.style.display = 'none';
+  fb.className = 'feedback';
+  document.getElementById('next-btn').style.display = 'none';
+}
+
+function selectAnswer(btn, selected, correct, exp, expCode) {
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+  const isCorrect = selected === correct;
+
+  if (isCorrect) {
+    score++;
+    btn.classList.add('correct');
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.choice-btn').forEach(b => {
+      if (b.dataset.correct === '1') b.classList.add('correct');
+    });
+  }
+
+  const fb    = document.getElementById('feedback-box');
+  const icon  = document.getElementById('fb-icon');
+  const title = document.getElementById('fb-title');
+  const expEl = document.getElementById('fb-exp');
+  const code  = document.getElementById('fb-code');
+
+  fb.className = 'feedback ' + (isCorrect ? 'ok' : 'ng');
+  icon.textContent  = isCorrect ? '✓' : '✗';
+  title.textContent = isCorrect ? '正解！' : `不正解　　正解：${correct}`;
+  expEl.textContent = exp;
+
+  if (expCode) { code.textContent = expCode; code.style.display = 'block'; }
+  else         { code.style.display = 'none'; }
+
+  fb.style.display = 'block';
+
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.style.display = 'block';
+  nextBtn.textContent = current < 9 ? '次の問題 →' : '結果を見る →';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= 10) showResult();
+  else loadQuestion();
+}
+
+function showResult() {
+  totalCorrect += score;
+  totalDone    += 10;
+  try {
+    localStorage.setItem('pyq_correct', totalCorrect);
+    localStorage.setItem('pyq_done',    totalDone);
+  } catch(e){}
+  updateStats();
+
+  document.getElementById('result-score').textContent = `${score}/10`;
+  const pct = score / 10;
+  let emoji, msg;
+  if (pct === 1)      { emoji = '🏆'; msg = '満点！完璧です。この調子で次のレベルへ！'; }
+  else if (pct >= .7) { emoji = '🎉'; msg = 'よくできました！少しずつ積み上げていきましょう。'; }
+  else if (pct >= .4) { emoji = '💪'; msg = 'いい調子です。間違えた問題をもう一度確認しましょう。'; }
+  else                { emoji = '📖'; msg = '基礎から少しずつ練習しましょう。繰り返しが大切です！'; }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-msg').textContent   = msg;
+  show('result-screen');
+}
+
+function updateStats() {
+  document.getElementById('stat-correct').textContent = totalCorrect;
+  document.getElementById('stat-total').textContent   = totalDone;
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() { updateStats(); show('home-screen'); }
+
+updateStats();
+</script>
+</body>
+</html>
