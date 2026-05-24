@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IRR計算アプリ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 760px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+      padding: 32px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      line-height: 1.2;
+    }
+
+    .lead {
+      margin: 0 0 28px;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .result-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 20px;
+      background: #ffffff;
+    }
+
+    .main-results {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .result-card {
+      background: #f1f5f9;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .result-label {
+      margin: 0 0 6px;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .result-value {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .sub-results {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .sub-label {
+      margin: 0 0 4px;
+      color: #64748b;
+    }
+
+    .sub-value {
+      margin: 0;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .error {
+      color: #dc2626;
+      font-weight: 700;
+    }
+
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    button {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #f1f5f9;
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        padding: 24px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .inputs,
+      .main-results,
+      .sub-results {
+        grid-template-columns: 1fr;
+      }
+
+      .result-value {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>IRR計算アプリ</h1>
+    <p class="lead">投資金額、リターン金額、期間（日数）から、IRRを計算します。</p>
+
+    <section class="inputs">
+      <div>
+        <label for="investment">投資金額</label>
+        <input id="investment" type="number" value="100000" min="0" />
+      </div>
+
+      <div>
+        <label for="returnAmount">リターン金額</label>
+        <input id="returnAmount" type="number" value="4000" />
+        <div class="hint">投資金額は含めず、利益だけを入力</div>
+      </div>
+
+      <div>
+        <label for="days">期間（日単位）</label>
+        <input id="days" type="number" value="30" min="1" />
+      </div>
+    </section>
+
+    <section class="result-box" id="resultBox">
+      <div class="main-results">
+        <div class="result-card">
+          <p class="result-label">IRR（年率換算）</p>
+          <p class="result-value" id="annualIrr">-</p>
+        </div>
+
+        <div class="result-card">
+          <p class="result-label">IRR（日次）</p>
+          <p class="result-value" id="dailyIrr">-</p>
+        </div>
+      </div>
+
+      <div class="sub-results">
+        <div>
+          <p class="sub-label">単純リターン</p>
+          <p class="sub-value" id="simpleReturn">-</p>
+        </div>
+
+        <div>
+          <p class="sub-label">最終受取額</p>
+          <p class="sub-value" id="finalAmount">-</p>
+        </div>
+
+        <div>
+          <p class="sub-label">計算式</p>
+          <p class="sub-value">((投資+利益)/投資)^(365/日数)-1</p>
+        </div>
+      </div>
+
+      <p class="error" id="errorMessage"></p>
+    </section>
+
+    <div class="actions">
+      <button type="button" id="resetButton">初期値に戻す</button>
+    </div>
+  </main>
+
+  <script>
+    const investmentInput = document.getElementById("investment");
+    const returnAmountInput = document.getElementById("returnAmount");
+    const daysInput = document.getElementById("days");
+
+    const annualIrrEl = document.getElementById("annualIrr");
+    const dailyIrrEl = document.getElementById("dailyIrr");
+    const simpleReturnEl = document.getElementById("simpleReturn");
+    const finalAmountEl = document.getElementById("finalAmount");
+    const errorMessageEl = document.getElementById("errorMessage");
+    const resetButton = document.getElementById("resetButton");
+
+    function formatPercent(value) {
+      if (!Number.isFinite(value)) return "-";
+      return (value * 100).toLocaleString("ja-JP", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4
+      }) + "%";
+    }
+
+    function formatYen(value) {
+      if (!Number.isFinite(value)) return "-";
+      return value.toLocaleString("ja-JP", {
+        style: "currency",
+        currency: "JPY",
+        maximumFractionDigits: 0
+      });
+    }
+
+    function showError(message) {
+      annualIrrEl.textContent = "-";
+      dailyIrrEl.textContent = "-";
+      simpleReturnEl.textContent = "-";
+      finalAmountEl.textContent = "-";
+      errorMessageEl.textContent = message;
+    }
+
+    function calculateIRR() {
+      const investment = Number(investmentInput.value);
+      const returnAmount = Number(returnAmountInput.value);
+      const days = Number(daysInput.value);
+
+      if (!Number.isFinite(investment) || !Number.isFinite(returnAmount) || !Number.isFinite(days)) {
+        showError("数値を入力してください。");
+        return;
+      }
+
+      if (investment <= 0) {
+        showError("投資金額は1円以上で入力してください。");
+        return;
+      }
+
+      if (days <= 0) {
+        showError("期間は1日以上で入力してください。");
+        return;
+      }
+
+      const finalAmount = investment + returnAmount;
+
+      if (finalAmount <= 0) {
+        showError("投資金額＋リターン金額が0円以下になるため計算できません。");
+        return;
+      }
+
+      const dailyIrr = Math.pow(finalAmount / investment, 1 / days) - 1;
+      const annualIrr = Math.pow(1 + dailyIrr, 365) - 1;
+      const simpleReturn = returnAmount / investment;
+
+      annualIrrEl.textContent = formatPercent(annualIrr);
+      dailyIrrEl.textContent = formatPercent(dailyIrr);
+      simpleReturnEl.textContent = formatPercent(simpleReturn);
+      finalAmountEl.textContent = formatYen(finalAmount);
+      errorMessageEl.textContent = "";
+    }
+
+    function resetValues() {
+      investmentInput.value = "100000";
+      returnAmountInput.value = "4000";
+      daysInput.value = "30";
+      calculateIRR();
+    }
+
+    investmentInput.addEventListener("input", calculateIRR);
+    returnAmountInput.addEventListener("input", calculateIRR);
+    daysInput.addEventListener("input", calculateIRR);
+    resetButton.addEventListener("click", resetValues);
+
+    calculateIRR();
+  </script>
+</body>
+</html>
